@@ -1,7 +1,7 @@
 # X thread — TreeOPSD verdict
 
 POSTED 2026-10-24 evening PT as 11 replies under
-https://x.com/SJRonanMD/status/2114189557843529741 (reply ids 2114190439674998877
+https://x.com/SJRonanMD/status/2114214898964332565 (reply ids 2114190439674998877
 .. 2114190453197443427; thread post 1 was included as reply 1). Verified live:
 numbers reply carries fig2-gaps.png with alt text; texts match this file.
 The closing reply promises the replication note, preregistration, and result

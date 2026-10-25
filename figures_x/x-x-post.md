@@ -1,6 +1,6 @@
 # X post — TreeOPSD verdict (standalone)
 
-POSTED: https://x.com/SJRonanMD/status/2114189557843529741 (2026-10-24 evening PT, with fig1-five-arms.png and alt text; verified live, text matches this draft exactly).
+POSTED: https://x.com/SJRonanMD/status/2114214898964332565 (2026-10-24 evening PT, with fig1-five-arms.png and alt text; verified live, text matches this draft exactly).
 
 We replicated the Tsinghua TreeOPSD paper (arXiv:2610.23181) on Qwen3-4B: 5 arms, 3 seeds, 2 GB300 Stations. Against a clipped control, the headline BC+ effect is +0.08 EM. The paper's unclipped control collapsed in 2 of 2 seeds at 4x dose. The bound did the work.
 

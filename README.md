@@ -61,7 +61,7 @@ packages under `results/` are the scored summaries of record.
 
 ## Links
 
-- Announcement post and thread: https://x.com/SJRonanMD/status/2114189557843529741
+- Announcement post and thread: https://x.com/SJRonanMD/status/2114214898964332565
 - arXiv note: [ID added on announcement]
 
 ## Notes on this release
