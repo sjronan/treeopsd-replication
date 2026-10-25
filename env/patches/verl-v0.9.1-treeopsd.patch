@@ -1,0 +1,71 @@
+diff --git a/verl/tools/schemas.py b/verl/tools/schemas.py
+index bf1b23ab..ebeed6d2 100644
+--- a/verl/tools/schemas.py
++++ b/verl/tools/schemas.py
+@@ -15,12 +15,16 @@
+ import json
+ from typing import Any, Literal
+ 
+-from pydantic import BaseModel, Field, model_validator
++from pydantic import BaseModel, ConfigDict, Field, model_validator
+ 
+ 
+ class OpenAIFunctionPropertySchema(BaseModel):
+     """The schema of a parameter in OpenAI format."""
+ 
++    # [treeopsd-replication patch] keep JSON-Schema keys such as items/minItems/maxItems so
++    # the tool block rendered into the prompt matches the paper's App. F.1 verbatim
++    model_config = ConfigDict(extra="allow")
++
+     # Union's type is list[str], e.g. ["integer", "number"] for int | float unions.
+     type: str | list[str]
+     description: str | None = None
+@@ -32,6 +36,9 @@ class OpenAIFunctionPropertySchema(BaseModel):
+ class OpenAIFunctionParametersSchema(BaseModel):
+     """The schema of parameters in OpenAI format."""
+ 
++    # [treeopsd-replication patch] keep additionalProperties etc. (paper App. F.1)
++    model_config = ConfigDict(extra="allow")
++
+     type: str
+     properties: dict[str, OpenAIFunctionPropertySchema]
+     # ``required`` can be omitted when no parameter is required.
+diff --git a/verl/workers/utils/losses.py b/verl/workers/utils/losses.py
+index ebaa4e4d..53b08800 100644
+--- a/verl/workers/utils/losses.py
++++ b/verl/workers/utils/losses.py
+@@ -24,6 +24,14 @@ from verl.utils.torch_functional import masked_mean, masked_sum
+ from verl.workers.config import ActorConfig, CriticConfig
+ from verl.workers.utils.padding import no_padding_2_padding
+ 
++# [treeopsd-replication patch] import extra modules (e.g. modules that register policy
++# losses) in every worker process; comma-separated module names in VERL_EXTRA_MODULES.
++import importlib as _importlib
++import os as _os
++
++for _m in filter(None, (_x.strip() for _x in _os.environ.get("VERL_EXTRA_MODULES", "").split(","))):
++    _importlib.import_module(_m)
++
+ 
+ def sft_loss(config: ActorConfig, model_output, data: TensorDict, dp_group=None):
+     pad_mode = tu.get_non_tensor_data(data=data, key="pad_mode", default=DatasetPadMode.NO_PADDING)
+@@ -88,7 +96,11 @@ def ppo_loss(config: ActorConfig, model_output, data: TensorDict, dp_group=None)
+         fields.append("rollout_is_weights")
+     if "ref_log_prob" in data:
+         fields.append("ref_log_prob")
++    # [treeopsd-replication patch] forward per-token "tree_*" tensors to the policy loss
++    tree_fields = [k for k in ("tree_turn_id", "tree_token_weight", "tree_tau") if k in data]
++    fields.extend(tree_fields)
+     data = data.select(*fields).to_padded_tensor()
++    extra_loss_inputs = {k: data[k] for k in tree_fields}
+ 
+     response_mask = data["response_mask"].to(bool)
+     # compute policy loss
+@@ -109,6 +121,7 @@ def ppo_loss(config: ActorConfig, model_output, data: TensorDict, dp_group=None)
+         loss_agg_mode=loss_agg_mode,
+         config=config,
+         rollout_is_weights=rollout_is_weights,
++        **extra_loss_inputs,
+     )
+ 
+     # AggregationType.MEAN for pg metrics: assumes policy_loss_fn normalizes by local_bsz/local_tokens

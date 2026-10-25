@@ -1,0 +1,29 @@
+# Same tool and schema as training (App. F.1); description adapted to the corpus. Frozen BrowseComp-Plus corpus (Qwen3-Embedding-8B released vectors).
+tools:
+  - class_name: "treeopsd.verl_ext.search_tool.FrozenSearchTool"
+    config:
+      type: native
+      retrieval_service_url: http://127.0.0.1:8001/retrieve   # overridden by TREEOPSD_RETRIEVER_URL
+      topk: 3
+      max_chars: 16384
+      timeout: 120
+    tool_schema:
+      type: function
+      function:
+        name: search
+        description: "Searches a fixed index of web documents for passages relevant to the given queries."
+        parameters:
+          type: object
+          properties:
+            query_list:
+              type: array
+              description: "A list of fully-formed natural-language search queries."
+              items:
+                type: string
+                minLength: 1
+                maxLength: 512
+              minItems: 1
+              maxItems: 4
+          required: ["query_list"]
+          additionalProperties: false
+        strict: true

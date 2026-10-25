@@ -1,0 +1,293 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{microtype}
+
+\title{Boundedness, Not the Posterior: A Preregistered Replication of
+TreeOPSD on Qwen3-4B}
+\author{Stephen J. Ronan\\RonanLabs\\Blackhawk, CA, USA}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We preregister and run a replication of TreeOPSD (\textit{Tree-Aware
+Posterior Distillation for Long-Horizon Agentic Reinforcement Learning},
+arXiv:2610.23181) on Qwen3-4B-Thinking-2507 with search-agent training.
+Against the paper's own control, unclipped TreePO, TreeOPSD passes both of
+our preregistered bars at three seeds: pooled exact-match gaps of $+3.76$
+$[+2.81, +4.74]$ on a four-set multi-hop QA average and $+3.45$
+$[+2.13, +4.78]$ on the long-horizon BC+ benchmark (830 questions). Both
+passes are fragile: seed-level intervals at $n=3$ include zero, and the
+largest contributor is one control seed that began to destabilise at the
+paper's dose. Against an added control, TreePO with ordinary ratio
+clipping, the BC+ gap is $+0.08$ $[-1.24, +1.41]$ and the QA gap is
+$+1.98$ $[+1.03, +2.94]$ pooled but declining across seeds
+($3.78, 2.10, 0.05$). The posterior term changes the per-update target by
+a median $1.05\%$ at the paper's dose; a preregistered dose sweep that
+raises this drift sevenfold produces no growing accuracy gap, and at
+$4\times$ dose the unclipped control collapses in training in two of two
+seeds while both bounded variants train through. The budget match claimed
+for tree sampling holds in generated tokens ($1.03\times$ GRPO) but not in
+trained tokens ($1.48\times$). Best-checkpoint selection shrinks the gap
+toward zero. We conclude that the supported mechanism in this setting is
+update boundedness, not posterior credit assignment, and that bounded
+tree backup itself is an effective and, once clipped, low-variance
+($0.80$ EM seed sd) method for training a 4B search agent.
+\end{abstract}
+
+\section{Introduction}
+
+TreeOPSD \cite{treeopsd} trains long-horizon agents by sampling a tree of
+continuations from shared prefixes, backing terminal rewards up the tree
+into turn-level values, converting those values into a bounded teacher
+distribution relative to a frozen behaviour policy, and matching the
+student to the teacher with a forward-KL self-distillation loss. The
+method is critic-free and is presented as a solution to credit assignment
+under sparse terminal rewards. Reported effects on multi-hop QA for
+Qwen3-4B-Thinking-2507 are small (TreeOPSD $44.13$ vs.\ TreePO $43.40$
+vs.\ GRPO $43.37$ MHQA average, five-seed means), with larger effects
+($+2.9$ to $+4.0$) on a deep-research track.
+
+A replication of this claim faces a confound in the original design. The
+paper's tree control, TreePO, applies its backed-up values without any
+ratio clip or bound, whereas TreeOPSD's teacher is bounded by
+construction. Outperformance against that control is therefore consistent
+with two mechanisms: (i) the posterior teacher supplies turn-level credit
+signal, as claimed; or (ii) any bound on the update improves stability
+and downstream accuracy. We resolve the confound by adding a control arm
+that keeps TreePO's sampler and backup but applies ordinary ratio
+clipping. We preregistered all arms, metrics, checkpoints and
+pass/kill bars before training (Section~\ref{sec:design}); the
+preregistration (\texttt{PREREG-EXP1.md}, one pre-training amendment) ships
+with our code and result packages.
+
+\paragraph{Contributions.} (1) A five-arm, three-seed replication with
+frozen retrieval and a fixed evaluation checkpoint. (2) A direct
+measurement of the posterior term's per-update effect (M1) and a
+preregistered dose--response test of its causal role. (3) Evidence that
+unclipped tree backup is systematically unstable (collapse in $2/2$ seeds
+at $4\times$ dose; destabilisation in $1/3$ seeds at $1\times$), and that
+either bound prevents it. (4) A token-accounting audit showing that the
+tree budget match holds for generated tokens ($1.03\times$) but not for
+trained tokens ($1.48\times$).
+
+\section{Design}
+\label{sec:design}
+
+\paragraph{Model and task.} Qwen3-4B-Thinking-2507, ReAct-style search
+agents with a frozen retrieval backend, trained for 100 steps
+\mbox{($M,N)=(4,2)$} trees for the tree arms) and evaluated greedily,
+one sample per question, at the fixed step-100 checkpoint. Tier~1 is the
+unweighted mean exact match (EM) over HotpotQA dev (7{,}405 questions),
+2WikiMultihopQA, MuSiQue and Bamboogle (125). Tier~2 is BC+ (830
+questions), our closed-corpus long-horizon track and the preregistered
+headline. Training and full evaluation ran on two DGX Station GB300
+systems and an RTX PRO 6000 sidecar; all C-vs-E scores reported as
+headline were re-scored on GB300 hardware so the deciding comparison
+shares one device class (as-scored values differ by at most $0.49$ EM and
+change no conclusion).
+
+\paragraph{Arms.} A: GRPO, $G=8$ (seed 0). B: TreePO literal, the paper's
+control, likelihood-$\omega$ backup, prompt-normalised, no ratio or clip
+(seeds 0--2). C: TreeOPSD (seeds 0--2). D: GRPO, $G=12$, the
+trained-token-matched GRPO (seed 0). E: TreePO with ordinary ratio
+clipping (seeds 0--2). All tree arms share the sampler, tree shape, data
+and retrieval.
+
+\paragraph{Statistics.} Rows are paired across runs by prompt hash.
+Gaps carry paired bootstrap intervals (10{,}000 resamples over questions,
+stratified by benchmark; pooled gaps average the per-question difference
+over seeds before resampling). We also report seed-level means, standard
+deviations and $t$ intervals ($n=3$). The bootstrap intervals carry
+evaluation noise only; the seed intervals carry training-seed noise only.
+We report both throughout, because in this setting they disagree, which
+is itself a result.
+
+\paragraph{Preregistered bars.} F1 (posterior does the work): kill if
+$|\text{TreeOPSD}-\text{TreePO}|<0.25$ with the interval excluding the
+paper's $+0.73$ on tier~1, or if the gap is $<1.0$ on tier~2 (where the
+paper claims $+2.90$); pass at $\geq +0.5$ (tier~1) / $\geq +1.5$
+(tier~2) with intervals excluding zero. Mechanism check M1: let
+$\mathrm{drift\_rel}=\overline{|\Gamma-V|}/\overline{|V|}$ over inner-loop
+blocks 2--4, where $\Gamma$ and $V$ are the TreeOPSD and TreePO targets.
+If $\mathrm{drift\_rel}<0.02$, the posterior term is declared inactive at
+that dose whatever the EM shows, and a preregistered dose sweep
+(EXP-1c) follows. F2 (budget): kill if any of generated tokens, tool
+calls or GPU-hours exceeds GRPO by $>1.15\times$, or if budget matching
+removes $>50\%$ of the gap. F3 (selection): kill if the gap's interval
+includes zero at the fixed checkpoint but excludes zero under
+best-in-window selection. F4 (retrieval): frozen by construction. F5
+(horizon): gain should grow with hop count; our MHQA design caps at five
+turns, so F5 evidence here is weak by construction and we claim no trend.
+
+\section{Results}
+
+\begin{table}[t]
+\centering
+\caption{Step-100 exact match. Tier~1 (QA avg) is the mean over the four
+QA sets; Bamboogle (125 questions) is included in the average but its
+column is omitted for width. C is shown GB300-scored (see text). A and D ran seed 0 only. The
+untrained base scores $30.8$ on frozen HotpotQA dev (paper ReAct $31.61$)
+and $22.8/6.5$ on the 500/200-question interim subsets.}
+\label{tab:arms}
+\begin{tabular}{lccccc}
+\toprule
+Run & BC+ & HotpotQA & 2Wiki & MuSiQue & QA avg \\
+\midrule
+A GRPO G=8 s0 & 10.00 & 43.44 & 48.55 & 18.41 & 39.80 \\
+B TreePO s0/s1/s2 & 10.48/7.23/6.27 & 42.58/45.97/39.54 & 49.93/53.78/41.57 & 18.57/20.61/14.05 & 39.17/42.89/34.99 \\
+C TreeOPSD s0/s1/s2 & 10.48/9.04/13.61 & 46.71/46.29/45.43 & 51.67/50.65/48.74 & 22.35/21.10/21.27 & 43.58/42.71/41.46 \\
+D GRPO G=12 s0 & 7.83 & 44.09 & 51.19 & 20.32 & 41.50 \\
+E TreePO-clipped s0/s1/s2 & 12.29/12.05/8.55 & 44.74/45.12/44.11 & 47.73/48.24/49.48 & 20.36/19.49/18.45 & 39.81/40.61/41.41 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Posterior vs.\ bounded (C$-$E): the deciding comparison.}
+Table~\ref{tab:gaps} gives the hardware-matched result. On tier~1 QA the
+pooled gap is $+1.98$ $[+1.03, +2.94]$, meeting the script's pass bar;
+per-seed it declines $3.78, 2.10, 0.05$, and the seed-level interval
+$[-2.66, +6.61]$ includes zero. On tier~2 BC+, where the paper's large
+effect is claimed, the pooled gap is $+0.08$ $[-1.24, +1.41]$ (per-seed
+$-1.81, -3.01, +5.06$), meeting the kill bar. The clipped control's tier~1
+seed sd ($0.80$) is the smallest of any arm (C $1.07$, B $3.95$). We read
+tier~1 as a real but seed-fragile pooled edge of at most $\approx\!2$ EM
+whose cause Section~\ref{sec:mech} does not allow us to credit to the
+posterior mechanism, and tier~2 as no posterior-specific effect.
+
+\paragraph{Against the paper's control (C$-$B).} Pooled gaps are tier~1
+$+3.76$ $[+2.81, +4.74]$ and tier~2 $+3.45$ $[+2.13, +4.78]$: passes by the
+letter of F1's EM bars. Seed-level intervals ($[-4.06, +11.57]$ and
+$[-6.13, +13.03]$) include zero. B seed~2 began to destabilise in its
+final 10 steps at the paper's dose: reward fell from $0.54$--$0.70$ to
+$0.22$--$0.40$, the length-clip ratio rose from $0.00$ to $0.27$, and the
+checkpoint issued $3.52$ tool calls per BC+ question against $1.81/1.97$
+for B s0/s1. Excluding B s2, the two-seed gaps are $+2.40$ (tier~1) and
+$+1.51$ (tier~2). Clipping alone (E$-$B) improves BC+ in all three seeds
+($+1.81, +4.82, +2.29$).
+
+\begin{table}[t]
+\centering
+\caption{Pooled gaps (question bootstrap, 10{,}000 resamples) with
+per-seed point values and seed-level $t$ intervals ($n=3$). C$-$E is
+hardware-matched; as-scored it reads $+2.17\,[+1.29,{+}3.06]$ (tier~1)
+and $+0.48\,[-0.84,{+}1.81]$ (tier~2).}
+\label{tab:gaps}
+\begin{tabular}{lllll}
+\toprule
+Gap & Tier & Pooled [95\% CI] & Per-seed & Seed $t$ interval \\
+\midrule
+C$-$E & QA & $+1.98$ $[+1.03, +2.94]$ & $3.78, 2.10, 0.05$ & $[-2.66, +6.61]$ \\
+C$-$E & BC+ & $+0.08$ $[-1.24, +1.41]$ & $-1.81, -3.01, 5.06$ & $[-10.74, +10.90]$ \\
+C$-$B & QA & $+3.76$ $[+2.81, +4.74]$ & $4.50, 0.31, 6.47$ & $[-4.06, +11.57]$ \\
+C$-$B & BC+ & $+3.45$ $[+2.13, +4.78]$ & $-0.36, 3.37, 7.35$ & $[-6.13, +13.03]$ \\
+C$-$A (s0) & QA / BC+ & $+3.78$ $[+2.41, +5.21]$ / $+0.48$ $[-1.69, +2.65]$ & -- & -- \\
+C$-$D (s0) & QA / BC+ & $+2.08$ $[+0.69, +3.53]$ / $+2.65$ $[+0.60, +4.82]$ & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Mechanism: M1 and the dose response}
+\label{sec:mech}
+
+At the paper's dose ($E=4$ inner-loop blocks per step) M1 trips:
+$\mathrm{drift\_rel}$ median $1.05\%$ over the full run and $1.56\%$ in
+the last quarter, below the preregistered $2\%$ inactivity line. Backup
+weights are near-one-hot in both tree arms
+($\omega_{\mathrm{peaked}} \approx 0.85$--$0.91$), so the backup is
+effectively single-child in this setting. EXP-1c raised the dose. At
+$E=8$, drift rose (median $1.23\%$, last-quarter $1.89\%$) and the tier~1
+subset gap was $-0.8$ EM: no growing accuracy gap. At $E=16$ (drift
+$4.79\%/7.74\%$, $34\%$ of calls above $10\%$) unclipped TreePO collapsed
+in training: reward $0.002$ and length-clip ratio $0.99$ by step~33; the
+step-40 checkpoint scores $0.0/0.0$ on the interim subsets. A second seed
+collapsed the same way (subset scores $17.8/0.0$; BC+ fully collapsed, QA
+degraded but answering). At the same dose, clipped TreePO trained through
+(reward $0.49$--$0.64$, clip ratio $\leq 0.10$; subsets $34.2/8.5$) as did
+TreeOPSD ($0.50$--$0.69$; $35.4/5.0$). Boundedness, in either form, is what
+separates survival from collapse; the posterior term adds no measurable
+signal beyond it at any tested dose. Combined with B s2's destabilisation
+at $E=4$, unclipped tree backup failed fully in $2/2$ seeds at $4\times$
+dose and partially in $1/3$ seeds at $1\times$; neither bounded variant
+failed in any run.
+
+\paragraph{Budget (F2).} Tree sampling is $1.03\times$ GRPO $G{=}8$ in
+generated tokens per prompt and $1.48\times$ in trained tokens per prompt
+($41{,}064$ vs.\ $27{,}779$ in the matched smoke runs), because shared
+prefixes are re-scored per branch during training. Token-matched GRPO
+(arm D) removes $44\%$ of the tier~1 C$-$A gap, below the $50\%$ F2b kill
+line; on BC+ the $G{=}8$ gap is $\approx 0$ and the ratio is undefined.
+The claimed budget match therefore depends on accounting in generated
+tokens only.
+
+\paragraph{Selection (F3).} Best-in-window scoring over checkpoints
+10/25/50/75/100 on fixed subsets shrinks C$-$B toward zero (per-seed mean
+$+0.3$ tier~1 / $+0.5$ tier~2, vs.\ $+1.5/+2.5$ at the final checkpoint
+on the same subsets), chiefly by rescuing B s2's pre-destabilisation peak
+($36.6$ at step~75 vs.\ $32.8$ at step~100, qa500i). The F3 kill pattern
+is not met and the shift runs in the opposite direction; selection favours
+the control. Our grid is coarser than the preregistration's every-5-steps
+ideal, which is conservative against this conclusion. Retrieval was
+frozen by construction (F4); an eval-drift control (B s0 Bamboogle
+re-scored after the study) returned an identical $45.6$.
+
+\section{Discussion and limitations}
+
+Three claims survive this replication. Bounded tree backup trains a 4B
+search agent effectively (base $22.8$ EM on our 500-question QA subset;
+$40.61 \pm 0.80$ and $42.58 \pm 1.07$ full-set QA means for arms E and C).
+Unclipped tree backup is fragile, systematically so at high dose.
+TreeOPSD outperforms the control as the paper defines it. The claim that
+does not survive is the mechanism: the posterior teacher's per-update
+effect is $\approx\!1\%$, its dose response is flat, and against a bounded
+control its advantage vanishes on the long-horizon track. The residual
+tier~1 C$-$E pooled edge is consistent with second-order dynamics we
+observed but did not isolate (C sustained $\approx\!43$K trained tokens
+per prompt where B's fell to $\approx\!33$K, and learned a longer,
+search-heavier style: $14.2$ vs.\ $10.6$ tool calls per prompt late in
+training) and with seed noise; $n=3$ cannot adjudicate. We also note the
+paper's reported seed sd ($\approx\!0.17$ EM) is far smaller than any arm
+here ($0.80$--$3.95$); replications at single seeds in this setting should
+be read accordingly.
+
+Limitations. Three seeds: every seed-level interval includes zero. One
+model at one scale. BC+ carries $\approx\!\pm2$ EM per-arm eval noise at
+830 questions; best-in-window used small subsets; GRPO arms ran one seed;
+eval is single-sample greedy; our tier~1 average (four sets) is composed
+differently from the paper's MHQA average, so levels are not directly
+comparable (our base-model harness anchor matches theirs: $30.8$ vs.\
+$31.61$). Nothing here speaks to TreeOPSD at larger scale, with a live
+retriever, or on horizons beyond our design.
+
+\section{Conclusion}
+
+Replicated against its own control, TreeOPSD passes. Replicated against a
+control that is merely clipped, its long-horizon advantage is zero and
+its QA advantage is at most about two points and seed-fragile, while its
+mechanism measures at $\approx\!1\%$ of the update it is supposed to
+drive. The robust, reusable finding of this study is about the control:
+tree backup without a bound collapses, and any bound fixes it. Papers
+that compare a bounded method against an unbounded control should expect
+this confound to be checked.
+
+\paragraph{Reproducibility.} Preregistration, training and scoring code,
+per-run logs and the three seed-package JSONs underlying
+Tables~\ref{tab:arms}--\ref{tab:gaps} are released with this note
+(repository \texttt{treeopsd-replication}: \texttt{PREREG-EXP1.md},
+\texttt{scripts/seed\_package.py}, \texttt{results/}). Experiments were
+designed and directed by the author and executed with AI-agent assistance
+under a file-based controller protocol; all rulings and deviations are
+preserved in the released correspondence log.
+
+\begin{thebibliography}{9}
+\bibitem{treeopsd} Zou, H., Wang, Q., et al. Tree-Aware Posterior
+Distillation for Long-Horizon Agentic Reinforcement Learning.
+arXiv:2610.23181, 2026.
+\end{thebibliography}
+
+\end{document}
+

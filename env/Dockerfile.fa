@@ -1,0 +1,12 @@
+# syntax=docker/dockerfile:1.7
+# flash-attn 2.8.3 layer on top of the study image (2026-10-21). Purpose: restore verl's
+# remove-padding path (varlen flash attention keeps packed sequences isolated), undoing the
+# speed cost of deviation D13 (SDPA + padded training: ~75% of a 1.7B step is actor passes).
+# Built for sm_100 only; sm_103 (GB300) runs sm_100 SASS (same major, binary compatible).
+ARG BASE=treeopsd-repl:verl0.9.1-vllm0.32.0
+FROM ${BASE}
+RUN MAX_JOBS=24 FLASH_ATTN_CUDA_ARCHS=100 NVCC_THREADS=2 \
+        python3 -m pip install --no-build-isolation --no-deps -v "flash-attn==2.8.3" 2>&1 | tail -40 \
+    && python3 -c "import flash_attn, flash_attn_2_cuda; print('flash_attn', flash_attn.__version__)"
+RUN python3 -m pip freeze | grep -iE '^(torch|torchvision|torchaudio|vllm|flashinfer[-_a-z]*|triton|transformers|xformers|numpy|nvidia-[a-z0-9-]+)==' \
+        | diff /etc/treeopsd-base-constraints.txt - && echo "base pins unchanged"

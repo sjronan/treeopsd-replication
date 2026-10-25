@@ -1,0 +1,29 @@
+# Paper App. F.1 tool schema (verbatim description), frozen wiki-18 E5 retriever.
+tools:
+  - class_name: "treeopsd.verl_ext.search_tool.FrozenSearchTool"
+    config:
+      type: native
+      retrieval_service_url: http://127.0.0.1:8000/retrieve   # overridden by TREEOPSD_RETRIEVER_URL
+      topk: 3
+      max_chars: 16384
+      timeout: 120
+    tool_schema:
+      type: function
+      function:
+        name: search
+        description: "Searches the local wiki-18 dense retrieval index for passages relevant to the given queries."
+        parameters:
+          type: object
+          properties:
+            query_list:
+              type: array
+              description: "A list of fully-formed natural-language search queries."
+              items:
+                type: string
+                minLength: 1
+                maxLength: 512
+              minItems: 1
+              maxItems: 4
+          required: ["query_list"]
+          additionalProperties: false
+        strict: true

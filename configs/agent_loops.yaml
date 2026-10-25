@@ -1,0 +1,5 @@
+# Registered in every AgentLoopWorker via rollout.agent.agent_loop_config_path.
+# All arms (GRPO included) use the same loop class so the scaffold is identical;
+# without a tree_prefix it behaves exactly like verl's tool_agent.
+- name: tree_tool_agent
+  _target_: treeopsd.verl_ext.tree_agent_loop.TreeToolAgentLoop
