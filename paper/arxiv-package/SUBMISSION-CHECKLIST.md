@@ -10,7 +10,7 @@ packet in ronanlabs-hq `publishing/endorsement/`).
   booktabs/amsmath/hyperref/microtype/graphicx only, inline
   thebibliography, no external figure files. sha256 matches
   `paper/main.tex`
-  (122a69b0f5c39d40a2febb4d0b6a4195d7facface5e5b2ddbe334c361ab68a4c).
+  (0c5f3944d7d8a960827f82e7108e7f8a862f9953dce985b2974e73f1c17646c1).
 - `main-compiled-2026-11-14.pdf` — proof compile of the W17 revision,
   7 pages (tectonic, 2026-11-14; baseline pre-edit compile passed at
   5 pages). For eyeballing only; arXiv compiles from source.

@@ -1,6 +1,6 @@
 # TreeOPSD number-check sheet
 
-Generated 2026-11-14 PT. Latest paper commit `fad62d6756919666f3533f4b9f469bff529047fd`; working paper differs from that commit: `False`. Input SHA-256 values below identify the exact audited bytes.
+Generated 2026-11-14 PT. Latest paper commit `fad62d6756919666f3533f4b9f469bff529047fd`; working paper differs from that commit: `True`. Input SHA-256 values below identify the exact audited bytes.
 
 487 occurrences: 473 MATCH, **0 numerical mismatches**, 14 unsupported rows (14 rows retain the fail-closed MISMATCH status in the inventory).
 
@@ -14,7 +14,7 @@ Drift audit: median-to-median drift increases 4.79/1.05 ≈ 4.56-fold; last-quar
 
 ## Input SHA-256
 
-- `paper/arxiv-package/main.tex`: `122a69b0f5c39d40a2febb4d0b6a4195d7facface5e5b2ddbe334c361ab68a4c`
+- `paper/arxiv-package/main.tex`: `0c5f3944d7d8a960827f82e7108e7f8a862f9953dce985b2974e73f1c17646c1`
 - `results/seed_package_CB.json`: `2416c55c74f0490a38fe80c24bd1363bb310aefc96e4e43dd75a0497e61ceab8`
 - `results/seed_package_CE_gb300.json`: `6d30c3f7a9314258dd92daf466e6f9290c10d00e298d14917c8f217c664ce08a`
 - `ANALYSIS-FINAL-20261024.md`: `849ca7579e979a17f98ff23ba96c68c9af444bc525edae7bd324ffbecd2a8993`
