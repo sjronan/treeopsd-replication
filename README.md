@@ -11,8 +11,8 @@ step-100 checkpoint, run on two DGX Station GB300 systems.
 ## Headline result
 
 Against the paper's own control (unclipped TreePO), TreeOPSD passes both
-preregistered bars: pooled exact-match gaps of +3.76 [+2.81, +4.74] on a
-four-set multi-hop QA average and +3.45 [+2.13, +4.78] on BC+ (830
+preregistered bars: pooled exact-match gaps of +3.76 [+2.81, +4.76] on a
+four-set multi-hop QA average and +3.45 [+2.17, +4.78] on BC+ (830
 questions, long-horizon track). Seed-level intervals at n=3 include zero,
 and about half the gap comes from one control seed destabilising late in
 training.

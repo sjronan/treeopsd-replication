@@ -23,7 +23,7 @@ TreeOPSD minus the clipped control, 3 seeds, same hardware: QA average +1.98 EM 
 
 ---
 
-Against the paper's unclipped control, TreeOPSD passes both preregistered bars: QA +3.76 [+2.81, +4.74], BC+ +3.45 [+2.13, +4.78]. Half that gap is one control seed breaking in its last 10 steps. Length-clip hit 0.27, tool calls per question nearly doubled.
+Against the paper's unclipped control, TreeOPSD passes both preregistered bars: QA +3.76 [+2.81, +4.76], BC+ +3.45 [+2.17, +4.78]. Half that gap is one control seed breaking in its last 10 steps. Length-clip hit 0.27, tool calls per question nearly doubled.
 
 ---
 

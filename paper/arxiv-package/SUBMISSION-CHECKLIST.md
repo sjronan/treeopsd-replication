@@ -10,7 +10,7 @@ packet in ronanlabs-hq `publishing/endorsement/`).
   booktabs/amsmath/hyperref/microtype/graphicx only, inline
   thebibliography, no external figure files. sha256 matches
   `paper/main.tex`
-  (a6f599b45107158397b46ae806caf8410adffdf5cde928ca133c025350c7df81).
+  (abd7b9a33b6a752488a419643bca009dd626dcb30205d9ed79232a73fd090c2d).
 - `main-compiled-2026-11-14.pdf` — proof compile of the W12 revision,
   7 pages (tectonic, 2026-11-14; baseline pre-edit compile passed at
   5 pages). For eyeballing only; arXiv compiles from source.
@@ -118,3 +118,15 @@ sentences a moderator or first reviewer will check.
   Li et al. TreePO name collision, TreeRL and Tree-GRPO); a venue
   version will still want more related work. Grok adversarial reviews
   of this package are filed in ronanlabs-hq `publishing/reviews/`.
+
+## Controller correction (2026-11-14 PT)
+
+Number check (number-check/) found two interval endpoints transcribed from
+ANALYSIS-FINAL-20261024.md that disagree with the committed receipt
+results/seed_package_CB.json: tier 1 upper +4.74 -> +4.76 and tier 2 lower
++2.13 -> +2.17 (3 occurrences each). The paper, abstract.txt, README and the
+X drafts now use the receipt values; pass/fail is unchanged. ANALYSIS-FINAL,
+the worklog and correspondence are historical records and keep the old
+values. Also fixed an "E{=8"/"E{=16" conversion artifact in abstract.txt.
+Remaining number-check rows (14) are values from Zou et al.'s tables and
+config settings that need a cited source, not corrections.
