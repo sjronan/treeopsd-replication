@@ -1,6 +1,6 @@
 # TreeOPSD number-check sheet
 
-Generated 2026-11-14 PT. Latest paper commit `d525808f1b0e3497dcb076f8d81e1642ba5cc75f`; working paper differs from that commit: `True`. Input SHA-256 values below identify the exact audited bytes.
+Generated 2026-11-14 PT. Latest paper commit `fad62d6756919666f3533f4b9f469bff529047fd`; working paper differs from that commit: `False`. Input SHA-256 values below identify the exact audited bytes.
 
 487 occurrences: 473 MATCH, **0 numerical mismatches**, 14 unsupported rows (14 rows retain the fail-closed MISMATCH status in the inventory).
 
