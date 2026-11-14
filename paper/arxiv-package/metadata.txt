@@ -1,0 +1,8 @@
+Title: Boundedness, Not the Posterior: A Preregistered Replication of TreeOPSD on Qwen3-4B
+Author: Stephen J. Ronan, MD (RonanLabs)
+Primary category: cs.LG
+Cross-list suggestion: cs.AI (optional, Stephen's call)
+Comments: 5 pages, 2 tables. Preregistration, code, and result packages: https://github.com/sjronan/treeopsd-replication
+License: CC BY 4.0 recommended (arXiv default non-exclusive also acceptable; Stephen picks at submission)
+Abstract: see abstract.txt (plain-text rendering of the abstract in main.tex)
+Source: main.tex only (self-contained: article class, booktabs/amsmath/hyperref/microtype, inline thebibliography, no external figures, no .bib/.bbl needed beyond what arXiv generates)
