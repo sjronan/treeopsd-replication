@@ -7,12 +7,13 @@ packet in ronanlabs-hq `publishing/endorsement/`).
 ## Package contents (this folder)
 
 - `main.tex` — the submission source. Self-contained: article class,
-  booktabs/amsmath/hyperref/microtype only, inline thebibliography,
-  no external figure files. sha256 matches `paper/main.tex`
-  (229a04b02f9a37834429704567a7bda420640fc7736a7b0843947f40809c8fb1).
-- `main-compiled-2026-11-14.pdf` — proof compile, 5 pages (tectonic,
-  2026-11-14; baseline pre-edit compile also passed at 5 pages).
-  For eyeballing only; arXiv compiles from source.
+  booktabs/amsmath/hyperref/microtype/graphicx only, inline
+  thebibliography, no external figure files. sha256 matches
+  `paper/main.tex`
+  (a6f599b45107158397b46ae806caf8410adffdf5cde928ca133c025350c7df81).
+- `main-compiled-2026-11-14.pdf` — proof compile of the W12 revision,
+  7 pages (tectonic, 2026-11-14; baseline pre-edit compile passed at
+  5 pages). For eyeballing only; arXiv compiles from source.
 - `abstract.txt` — plain-text abstract for the submission form.
 - `metadata.txt` — title, author, category, comments field.
 
@@ -26,6 +27,29 @@ packet in ronanlabs-hq `publishing/endorsement/`).
    That becomes true only when Stephen does the verification pass
    below. Do not submit before it.
 
+## W12 revision (2026-11-14, PI decisions applied)
+
+Title is now "A Preregistered Replication of TreeOPSD on Qwen3-4B"
+(also in `metadata.txt`; `abstract.txt` regenerated). Findings 2-7
+applied as the PI chose: bootstrap-vs-seed pass wording (with the M1
+mechanism kill stated next to it), boundedness framed against Zou
+et al.'s clipping-vs-target distinction and their GSPO row, HotpotQA
+training / tier-2 transfer stated, collapse claims narrowed to the
+seeds (17.8/0.0), protocol paragraph added (same four-set mean,
+greedy vs sampled MHQA, step 100 vs their window, unique-turn
+reconstruction, Bamboogle column restored from the seed-package JSONs,
+BC+ cited; greedy tier 1 vs our own preregistration and the 20-turn
+BC+ cap also stated), F3 "conservative" deleted, 0.80 scoped to QA
+(BC+ sd 2.09), and ten bibliography entries added (GSPO first).
+Table numbers unchanged (W12b owns the number-check sheet).
+A fresh Grok Build CLI adversarial pass on the revised text resolved
+Findings 2, 4, 5, 6, 7 and Finding 3 after one scoped sentence fix;
+its verified new points (M1 conjunct, C-E bar labels, TreeRL
+citation, turn cap, abstract dose point) are fixed in this revision.
+Still open, unchanged by W12: Finding 1's hardware-matched pooled
+C-B interval (W12b), F2 tool-call/GPU-hour reporting vs the 1.15x
+line, and the AI-assistance paragraph wording (W6 form kept).
+
 ## Grok adversarial review (2026-11-14) — decisions needed before submitting
 
 Full review: ronanlabs-hq `publishing/reviews/grok-adversarial-treeopsd-2026-11-14.md`.
@@ -37,7 +61,8 @@ as-scored and prints the hardware-matched C-B per-seed gaps (QA 4.41,
 -0.18, 6.47; BC+ 0.00, 1.81, 7.35). No hardware-matched pooled C-B
 interval exists in the packages; computing one is open.
 
-Left for Stephen, not edited by W6 (they change the paper's argument):
+Left for Stephen by W6; decided by Stephen 2026-11-14 and applied by
+W12 above (list kept for the record):
 1. "Passes both bars" rests on question-bootstrap intervals while the
    paper's own seed intervals include zero (Finding 2).
 2. Title and mechanism sentence ("boundedness, not the posterior")
@@ -88,7 +113,8 @@ sentences a moderator or first reviewer will check.
 - TMLR later means a separate anonymized manuscript; nothing in this
   package is anonymized. TMLR solo quota is 2 single-author
   submissions per calendar year (TreeOPSD would be slot 1).
-- The one bibliography entry (arXiv:2610.23181) is deliberate; a
-  reviewer will want more related work for a venue version, less so
-  for an arXiv note. Grok adversarial review of this package is filed
-  in ronanlabs-hq `publishing/reviews/`.
+- The bibliography now has eleven entries (W12 added GSPO, GRPO, PPO,
+  Qu et al. 2026a, BrowseComp-Plus, Search-R1, OpenResearcher, the
+  Li et al. TreePO name collision, TreeRL and Tree-GRPO); a venue
+  version will still want more related work. Grok adversarial reviews
+  of this package are filed in ronanlabs-hq `publishing/reviews/`.
