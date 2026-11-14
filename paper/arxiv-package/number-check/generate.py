@@ -215,7 +215,7 @@ for a,b,spans in [
     (results_start+tables[0].end(),text.index("\\paragraph{Against",results_start),ce_spans+header),
     (text.index("\\paragraph{Against",results_start),t2start,cb_spans+header),
     (t2start,results_start+tables[1].end(),header+ce_spans+cb_spans),
-    (text.index('\\section{Mechanism'),text.index('\\paragraph{Budget'),mech+verdict),
+    (text.index('\\section{Mechanism'),text.index('\\paragraph{Budget'),mech+verdict+header),
     (text.index('\\paragraph{Budget'),text.index('\\paragraph{Selection'),budget),
     (text.index('\\paragraph{Selection'),results_end,selection+header),
 ]:corroborate(a,b,spans)
@@ -259,6 +259,14 @@ for m in re.finditer(r'temperature \$0\.6\$, top-\$p\$ \$0\.95\$',text[results_e
 for metric,pat in [('tier1_qa',r'\+1\.98.*?\[\+1\.03, \+2\.94\]'),('tier2_bcplus',r'\+0\.08.*?\[-1\.24, \+1\.41\]')]:
     for m in re.finditer(pat,text[results_end:audit_end],re.S):
         sequence(m.group(),pooled(CE,metric),results_end+m.start())
+# Bind all repeated pooled comparisons, including new mechanism paragraphs.
+for a,b in [(abstract_start,abstract_end),(results_start,audit_end)]:
+    for path,metric,pat in [
+        (CE,'tier1_qa',r'\+1\.98\$\s*\$\[\+1\.03, \+2\.94\]'),
+        (CE,'tier2_bcplus',r'\+0\.08\$\s*\$\[-1\.24, \+1\.41\]'),
+    ]:
+        for m in re.finditer(pat,text[a:b]):sequence(m.group(),pooled(path,metric),a+m.start())
+
 for region,a,b in [('Abstract',abstract_start,abstract_end),('Results through conclusion (including Tables 1–2)',results_start,audit_end)]:
     for m in tokens(a,b):
         line=raw.count('\n',0,m.start())+1
@@ -281,17 +289,17 @@ paper_dirty=bool(subprocess.check_output(['git','diff','HEAD','--',PAPER],cwd=RO
 hashes={p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest() for p in [PAPER,CB,CE,ANALYSIS]}
 fields=list(rows[0])
 with (OUT/'number-check.csv').open('w',newline='') as f:
-    w=csv.DictWriter(f,fieldnames=fields);w.writeheader();w.writerows(rows)
+    w=csv.DictWriter(f,fieldnames=fields,lineterminator='\n');w.writeheader();w.writerows(rows)
 bad=[r for r in rows if r['status']=='MISMATCH']
 unsupported=[r for r in bad if not r['source_path']]
-def cell(v):return str(v).replace('|','\\|').replace('\n',' ')
+def cell(v):return str(v).replace('|','\\|').replace('\n',' ').strip()
 with (OUT/'number-check.md').open('w') as f:
     f.write('# TreeOPSD number-check sheet\n\n')
     f.write(f'Generated {datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d PT")}. Latest paper commit `{paper_commit}`; working paper differs from that commit: `{paper_dirty}`. Input SHA-256 values below identify the exact audited bytes.\n\n')
     f.write(f'{len(rows)} occurrences: {len(rows)-len(bad)} MATCH, **{len(bad)} MISMATCH** ({len(unsupported)} lack mapped evidence).\n\n')
     f.write('Scope: every digit-bearing numeric token and the quantity words zero/one/two/three/four/five/sevenfold in the TeX abstract and Results, Mechanism, Discussion and Conclusion sections, including both complete tables, captions, seed labels, model identifiers and protocol labels. Repeated claims get separate rows. Table numbers are implicit in TeX and table labels identify them. TeX thousands separators are parsed as a single number. No paper text is edited.\n\n')
     f.write('JSON metrics override analysis prose. Run QA means, arm SDs, seed t intervals (two-sided 95% Student t critical, df=2), and two-seed gaps are recomputed. Pooled bootstrap CIs and other source-only values are transcribed, not independently re-estimated. MATCH on analysis-only rows means corroboration by that narrative; it does not certify raw logs. MISMATCH with no source is an evidence gap, not proof the claim is false. Seed t endpoints use the precise two-sided 95% critical value (4.302652729911275); the analysis rounds that constant to 4.30.\n\n')
-    f.write('The sevenfold drift claim is a MISMATCH: median-to-median drift increases 4.79/1.05 ≈ 4.56-fold; last-quarter drift increases 7.74/1.56 ≈ 4.96-fold. 7.74/1.05 ≈ 7.37 mixes time windows. Structural identifier rows are included for coverage, not experimental findings.\n\n')
+    f.write('Drift audit: median-to-median drift increases 4.79/1.05 ≈ 4.56-fold; last-quarter drift increases 7.74/1.56 ≈ 4.96-fold. 7.74/1.05 ≈ 7.37 mixes time windows. If sevenfold wording appears in the audited text, it is flagged as MISMATCH. Structural identifier rows are included for coverage, not experimental findings.\n\n')
     f.write('## Input SHA-256\n\n'+''.join(f'- `{p}`: `{h}`\n' for p,h in hashes.items()))
     f.write('\n## Mismatches and evidence gaps\n\n')
     for r in bad:f.write(f'- Line {r["paper_line"]}, `{r["paper_value"]}`: {cell(r["source_key"])}; source/recomputed `{r["recomputed_value"]}`. Context: {cell(r["context"])}\n')

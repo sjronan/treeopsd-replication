@@ -27,7 +27,7 @@ or silently use unrelated values from a replication run. MISMATCH distinguishes
 an actual disagreement (nonempty source/recomputed value) from absent evidence
 (empty source/recomputed value). Inspect both before signing the sheet.
 
-The generator deliberately reports the sevenfold drift wording against matched
+If sevenfold drift wording is present, the generator checks it against matched
 median time windows (4.79/1.05), not the last-quarter/full-run combination
 (7.74/1.05). The analysis document itself repeats two CB bootstrap endpoints that
 differ from `seed_package_CB.json`; those package disagreements are retained.
