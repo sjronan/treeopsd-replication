@@ -10,8 +10,8 @@ packet in ronanlabs-hq `publishing/endorsement/`).
   booktabs/amsmath/hyperref/microtype/graphicx only, inline
   thebibliography, no external figure files. sha256 matches
   `paper/main.tex`
-  (abd7b9a33b6a752488a419643bca009dd626dcb30205d9ed79232a73fd090c2d).
-- `main-compiled-2026-11-14.pdf` — proof compile of the W12 revision,
+  (122a69b0f5c39d40a2febb4d0b6a4195d7facface5e5b2ddbe334c361ab68a4c).
+- `main-compiled-2026-11-14.pdf` — proof compile of the W17 revision,
   7 pages (tectonic, 2026-11-14; baseline pre-edit compile passed at
   5 pages). For eyeballing only; arXiv compiles from source.
 - `abstract.txt` — plain-text abstract for the submission form.
@@ -47,8 +47,8 @@ Findings 2, 4, 5, 6, 7 and Finding 3 after one scoped sentence fix;
 its verified new points (M1 conjunct, C-E bar labels, TreeRL
 citation, turn cap, abstract dose point) are fixed in this revision.
 Still open, unchanged by W12: Finding 1's hardware-matched pooled
-C-B interval (W12b), F2 tool-call/GPU-hour reporting vs the 1.15x
-line, and the AI-assistance paragraph wording (W6 form kept).
+C-B interval (W12b) and the AI-assistance paragraph wording (W6 form kept).
+W17 added the F2 reporting limitation and labelled smoke-run indications below.
 
 ## Grok adversarial review (2026-11-14) — decisions needed before submitting
 
@@ -94,8 +94,8 @@ sentences a moderator or first reviewer will check.
   disclosure wording).
 - [ ] Confirm the repository URL in the text
   (https://github.com/sjronan/treeopsd-replication) is the public home
-  you want cited. Do not push this branch to it until you approve;
-  the cited repo currently holds the October version.
+  you want cited. Stephen approved repository publication on 2026-11-14 PT;
+  this approval does not submit the package to arXiv.
 - [ ] Get endorsed for cs.LG (endorsement packet; sequential asks,
   about 10 days apart; endorsement is not peer review and moderation
   is a second gate after it).
@@ -130,3 +130,15 @@ the worklog and correspondence are historical records and keep the old
 values. Also fixed an "E{=8"/"E{=16" conversion artifact in abstract.txt.
 Remaining number-check rows (14) are values from Zou et al.'s tables and
 config settings that need a cited source, not corrections.
+
+## W17 F2 reporting (2026-11-14 PT)
+
+Generated tokens pass and trained tokens fail against the 1.15x line
+(1.03x and 1.48x). Full-100-step tool-call and GPU-time measures were not
+recorded, so that part of F2 is not evaluable and F2 has no established pass.
+The added smoke-run indication cites the committed S1b report: TreeOPSD
+versus GRPO G=8, 4.9/8.1 tool calls per training prompt (0.60x), approximate
+345/250 seconds per step (1.38x), 10 steps per arm at 64 prompts per step,
+no intervals. Those values are not full-window F2 results. The number check
+now maps them to that report and the F2 threshold/window to PREREG-EXP1.md.
+The abstract is unchanged by W17.

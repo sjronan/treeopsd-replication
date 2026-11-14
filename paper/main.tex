@@ -323,6 +323,16 @@ had already failed, so there is no accuracy gap to plot there.
 generated tokens per prompt and $1.48\times$ in trained tokens per prompt
 ($41{,}064$ vs.\ $27{,}779$ in the matched smoke runs), because shared
 prefixes are re-scored per branch during training in our implementation.
+Against the preregistered $1.15\times$ line, generated tokens pass and
+trained tokens fail; tool-call and GPU-time measures over the full $100$-step window were
+not recorded, so that part of F2 is not evaluable and F2 has no established
+pass. As an indication only, the committed S1b smoke report
+(\path{correspondence/outbox/005-exp1-launched-g-tok-20261021.md})
+gives TreeOPSD versus GRPO $G{=}8$ tool calls per training prompt of
+$4.9$ versus $8.1$ ($0.60\times$, below the line) and approximate step
+wall times of $345$ versus $250$ seconds ($1.38\times$, above the line),
+over $10$ steps per arm at $64$ prompts per step, with no intervals;
+these are smoke-run values, not full-window GPU-hour or tool-call results.
 Zou et al.\ use unique-turn reconstruction, which scores each shared
 turn once, so the $1.48\times$ trained-token figure describes our
 implementation and does not rebut their generated-token budget match

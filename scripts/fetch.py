@@ -8,7 +8,7 @@ DRY RUN BY DEFAULT: prints what would be fetched and the total size. Pass --yes 
 download. Python standard library only, plus `curl` for resumable transfers.
 
   python3 scripts/fetch.py --groups mhqa,model-e5-base-v2          # dry run
-  python3 scripts/fetch.py --groups mhqa --root /data/treeopsd --yes
+  python3 scripts/fetch.py --groups mhqa --root ./data/treeopsd --yes
   python3 scripts/fetch.py --list                                   # groups + sizes
 
 Layout: <root>/<group>/<path-in-repo>. Each finished group gets a

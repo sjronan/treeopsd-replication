@@ -22,10 +22,14 @@ ROOT = Path(__file__).resolve().parents[3]
 OUT = Path(__file__).resolve().parent
 PAPER = 'paper/arxiv-package/main.tex'
 ANALYSIS = 'ANALYSIS-FINAL-20261024.md'
+PREREG = 'PREREG-EXP1.md'
+SMOKE = 'correspondence/outbox/005-exp1-launched-g-tok-20261021.md'
 CB = 'results/seed_package_CB.json'
 CE = 'results/seed_package_CE_gb300.json'
 PACKAGES = {p: json.loads((ROOT / p).read_text()) for p in (CB, CE)}
 analysis = (ROOT / ANALYSIS).read_text()
+prereg = (ROOT / PREREG).read_text()
+smoke = (ROOT / SMOKE).read_text()
 # Keep original offsets while normalizing TeX thousands separators and signs.
 raw = (ROOT / PAPER).read_text()
 text = raw.replace('{,}', ',  ').replace('{+}', ' + ')
@@ -219,6 +223,38 @@ for a,b,spans in [
     (text.index('\\paragraph{Budget'),text.index('\\paragraph{Selection'),budget),
     (text.index('\\paragraph{Selection'),results_end,selection+header),
 ]:corroborate(a,b,spans)
+# F2: separate preregistered full-window requirements from smoke indications.
+f2 = text.index('\\paragraph{Budget')
+threshold = float(re.search(r'KILL-F2a.*?ratio > (\d+\.\d+)', prereg).group(1))
+sequence('$1.15\\times$ line', [source(PREREG, '§5 F2 KILL-F2a ratio threshold', threshold)], f2)
+window = int(re.search(r'Measured per prompt over all (\d+) steps', prereg).group(1))
+sequence('full $100$-step window', [source(PREREG, '§5 F2 measurement window in training steps', window)], f2)
+smoke_heading = re.search(r'4B smoke \(S1b, B=(\d+), (\d+) steps each\)', smoke)
+smoke_grpo_g = int(re.search(r'\| per prompt .*?GRPO G=(\d+)', smoke).group(1))
+sequence('TreeOPSD versus GRPO $G{=}8$', [source(SMOKE, 'S1b table header: GRPO rollout G', smoke_grpo_g)], f2)
+def smoke_cells(label):
+    line = next(line for line in smoke.splitlines() if line.startswith('| '+label+' |'))
+    return [float(re.search(r'\d+(?:\.\d+)?', cell).group()) for cell in line.split('|')[2:4]]
+calls = smoke_cells('tool calls')
+times = smoke_cells('step wall time')
+sequence('$4.9$ versus $8.1$ ($0.60\\times$', [
+    source(SMOKE, 'S1b table: TreeOPSD tool calls per training prompt', calls[0]),
+    source(SMOKE, 'S1b table: GRPO G=8 tool calls per training prompt', calls[1]),
+    calc(SMOKE, 'S1b table: tool calls TreeOPSD / GRPO', calls, lambda v: v[0]/v[1], 'ratio of rounded smoke-run means; not a full-window estimate'),
+], f2)
+sequence('$345$ versus $250$ seconds ($1.38\\times$', [
+    source(SMOKE, 'S1b table: approximate TreeOPSD step wall seconds', times[0]),
+    source(SMOKE, 'S1b table: approximate GRPO step wall seconds', times[1]),
+    calc(SMOKE, 'S1b table: approximate step wall time TreeOPSD / GRPO', times, lambda v: v[0]/v[1], 'ratio of approximate smoke-run step times; not GPU-hours'),
+], f2)
+sequence('$10$ steps per arm at $64$ prompts per step', [
+    source(SMOKE, 'S1b heading: steps per arm', int(smoke_heading.group(2))),
+    source(SMOKE, 'S1b heading: prompts per step B', int(smoke_heading.group(1))),
+], f2)
+# Digits inside the literal receipt filename are identifiers, not findings.
+receipt_pos = text.index(SMOKE, f2)
+for m in tokens(receipt_pos, receipt_pos+len(SMOKE)):
+    put(m, source(SMOKE, 'receipt filename identifier', number(m.group()), 'structural source identifier'))
 # Explicit analysis evidence for design labels, table confidence and known
 # abstract paraphrases whose numeric form is spelled out differently upstream.
 for a,b in [(abstract_start,abstract_end),(results_start,results_end)]:
@@ -286,23 +322,25 @@ for region,a,b in [('Abstract',abstract_start,abstract_end),('Results through co
 head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
 paper_commit=subprocess.check_output(['git','log','-1','--format=%H','--',PAPER],cwd=ROOT,text=True).strip()
 paper_dirty=bool(subprocess.check_output(['git','diff','HEAD','--',PAPER],cwd=ROOT))
-hashes={p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest() for p in [PAPER,CB,CE,ANALYSIS]}
+hashes={p:hashlib.sha256((ROOT/p).read_bytes()).hexdigest() for p in [PAPER,CB,CE,ANALYSIS,PREREG,SMOKE]}
 fields=list(rows[0])
 with (OUT/'number-check.csv').open('w',newline='') as f:
     w=csv.DictWriter(f,fieldnames=fields,lineterminator='\n');w.writeheader();w.writerows(rows)
 bad=[r for r in rows if r['status']=='MISMATCH']
 unsupported=[r for r in bad if not r['source_path']]
+numerical_mismatches=[r for r in bad if r['source_path']]
 def cell(v):return str(v).replace('|','\\|').replace('\n',' ').strip()
 with (OUT/'number-check.md').open('w') as f:
     f.write('# TreeOPSD number-check sheet\n\n')
     f.write(f'Generated {datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d PT")}. Latest paper commit `{paper_commit}`; working paper differs from that commit: `{paper_dirty}`. Input SHA-256 values below identify the exact audited bytes.\n\n')
-    f.write(f'{len(rows)} occurrences: {len(rows)-len(bad)} MATCH, **{len(bad)} MISMATCH** ({len(unsupported)} lack mapped evidence).\n\n')
+    f.write(f'{len(rows)} occurrences: {len(rows)-len(bad)} MATCH, **{len(numerical_mismatches)} numerical mismatches**, {len(unsupported)} unsupported rows ({len(bad)} rows retain the fail-closed MISMATCH status in the inventory).\n\n')
     f.write('Scope: every digit-bearing numeric token and the quantity words zero/one/two/three/four/five/sevenfold in the TeX abstract and Results, Mechanism, Discussion and Conclusion sections, including both complete tables, captions, seed labels, model identifiers and protocol labels. Repeated claims get separate rows. Table numbers are implicit in TeX and table labels identify them. TeX thousands separators are parsed as a single number. No paper text is edited.\n\n')
     f.write('JSON metrics override analysis prose. Run QA means, arm SDs, seed t intervals (two-sided 95% Student t critical, df=2), and two-seed gaps are recomputed. Pooled bootstrap CIs and other source-only values are transcribed, not independently re-estimated. MATCH on analysis-only rows means corroboration by that narrative; it does not certify raw logs. MISMATCH with no source is an evidence gap, not proof the claim is false. Seed t endpoints use the precise two-sided 95% critical value (4.302652729911275); the analysis rounds that constant to 4.30.\n\n')
+    f.write('F2 requirements are bound to PREREG-EXP1.md §5. The separately labelled S1b tool-call means, approximate wall times, ratios and 10-step/64-prompt denominators are checked against the committed smoke report. They do not measure full-100-step tool calls or GPU-hours.\n\n')
     f.write('Drift audit: median-to-median drift increases 4.79/1.05 ≈ 4.56-fold; last-quarter drift increases 7.74/1.56 ≈ 4.96-fold. 7.74/1.05 ≈ 7.37 mixes time windows. If sevenfold wording appears in the audited text, it is flagged as MISMATCH. Structural identifier rows are included for coverage, not experimental findings.\n\n')
     f.write('## Input SHA-256\n\n'+''.join(f'- `{p}`: `{h}`\n' for p,h in hashes.items()))
     f.write('\n## Mismatches and evidence gaps\n\n')
     for r in bad:f.write(f'- Line {r["paper_line"]}, `{r["paper_value"]}`: {cell(r["source_key"])}; source/recomputed `{r["recomputed_value"]}`. Context: {cell(r["context"])}\n')
     f.write('\n## Full side-by-side inventory\n\n| # | Paper line | Paper value | Context | Source path and key | Source value | Recomputed value | Method | Status |\n|---|---|---|---|---|---|---|---|---|\n')
     for r in rows:f.write('| '+' | '.join(cell(x) for x in [r['occurrence'],r['paper_line'],r['paper_value'],r['context'],r['source_path']+' '+r['source_key'],r['source_value'],r['recomputed_value'],r['method'],r['status']])+' |\n')
-print(json.dumps(dict(occurrences=len(rows),mismatches=len(bad),unsupported=len(unsupported),head=head)))
+print(json.dumps(dict(occurrences=len(rows),matches=len(rows)-len(bad),numerical_mismatches=len(numerical_mismatches),unsupported=len(unsupported),mismatches=len(bad),head=head)))

@@ -3,8 +3,8 @@
 # TreeOPSD replication. DRY RUN unless YES=1. Nothing multi-GB is fetched by
 # default. All files are pinned by revision and verified by sha256 (scripts/manifest.tsv).
 #
-#   TREEOPSD_DATA_ROOT=/data/treeopsd STAGE=exp1 ./scripts/fetch_data.sh          # dry run
-#   TREEOPSD_DATA_ROOT=/data/treeopsd STAGE=exp1 YES=1 ./scripts/fetch_data.sh
+#   TREEOPSD_DATA_ROOT=./data/treeopsd STAGE=exp1 ./scripts/fetch_data.sh          # dry run
+#   TREEOPSD_DATA_ROOT=./data/treeopsd STAGE=exp1 YES=1 ./scripts/fetch_data.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 : "${TREEOPSD_DATA_ROOT:=./data}"
